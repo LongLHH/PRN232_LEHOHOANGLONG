@@ -145,7 +145,7 @@ PRN232_LEHOHOANGLONG/
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=YOUR_SERVER;Database=FUNewsManagement;Trusted_Connection=True;TrustServerCertificate=True;"
+    "DefaultConnection": "Server=YOUR_SERVER;Database=FUNewsManagementSystem;Trusted_Connection=True;TrustServerCertificate=True;"
   }
 }
 ```
@@ -192,9 +192,9 @@ dotnet run
 
 | Role | Email | Password |
 |------|-------|----------|
-| Admin | admin@funews.com | Admin@123 |
-| Staff | staff@funews.com | Staff@123 |
-| Lecturer | lecturer@funews.com | Lecturer@123 |
+| Admin | admin@FUNewsManagementSystem.org | @@abc123@@ |
+| Staff | staff1@funews.edu.vn | 123456 |
+| Lecturer | lecturer1@funews.edu.vn | 123456 |
 
 ---
 
@@ -362,7 +362,7 @@ Additional documentation files in the project:
 ## 📞 Contact
 
 **Student:** Lê Hồ Hoàng Long  
-**Email:** longse181754@fpt.edu.vn  
+**Email:** longlhhse181754@fpt.edu.vn  
 **GitHub:** https://github.com/LongLHH/PRN232_LEHOHOANGLONG
 
 ---
@@ -412,7 +412,7 @@ dotnet run
 # Swagger: http://localhost:5119/swagger
 
 # 7. Login with default credentials
-# Admin: admin@funews.com / Admin@123
+# Admin: admin@FUNewsManagementSystem.org / @@abc123@@
 ```
 
 ---
