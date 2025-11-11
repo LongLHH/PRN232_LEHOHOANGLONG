@@ -1,0 +1,433 @@
+@model WebApp.Models.DashboardViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="mb-4">
+    <h2><i class="bi bi-speedometer2"></i> Admin Dashboard</h2>
+    <p class="text-muted">Overview of system statistics and analytics</p>
+</div>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle"></i> @TempData["ErrorMessage"]
+    </div>
+}
+
+<!-- Summary Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card border-primary shadow-sm">
+            <div class="card-body text-center">
+                <i class="bi bi-newspaper fs-1 text-primary"></i>
+                <h3 class="mt-2 mb-0">@Model.TotalArticles</h3>
+                <p class="text-muted mb-0">Total Articles</p>
+                <small class="text-success">@Model.ActiveArticles Active</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-info shadow-sm">
+            <div class="card-body text-center">
+                <i class="bi bi-folder fs-1 text-info"></i>
+                <h3 class="mt-2 mb-0">@Model.TotalCategories</h3>
+                <p class="text-muted mb-0">Categories</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-warning shadow-sm">
+            <div class="card-body text-center">
+                <i class="bi bi-tags fs-1 text-warning"></i>
+                <h3 class="mt-2 mb-0">@Model.TotalTags</h3>
+                <p class="text-muted mb-0">Tags</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-success shadow-sm">
+            <div class="card-body text-center">
+                <i class="bi bi-people fs-1 text-success"></i>
+                <h3 class="mt-2 mb-0">@Model.TotalUsers</h3>
+                <p class="text-muted mb-0">Total Users</p>
+                <small class="text-muted">Staff: @Model.TotalStaffs | Lecturers: @Model.TotalLecturers</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-4 mb-4">
+    <!-- Article Status Pie Chart -->
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Articles by Status</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="statusChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Role Distribution Doughnut Chart -->
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-pie-chart-fill"></i> Users by Role</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="roleChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Articles by Category Bar Chart -->
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Articles by Category</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="categoryChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Lists Row -->
+<div class="row g-4 mb-4">
+    <!-- Top Categories -->
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-trophy"></i> Top 5 Categories</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.TopCategories != null && Model.TopCategories.Any())
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var cat in Model.TopCategories)
+                        {
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-folder-fill text-primary"></i> @cat.CategoryName</span>
+                                <span class="badge bg-primary rounded-pill">@cat.ArticleCount articles</span>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted text-center">No data available</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Tags -->
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-warning text-white">
+                <h5 class="mb-0"><i class="bi bi-trophy-fill"></i> Top 5 Tags</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.TopTags != null && Model.TopTags.Any())
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var tag in Model.TopTags)
+                        {
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-tag-fill text-warning"></i> @tag.TagName</span>
+                                <span class="badge bg-warning rounded-pill">@tag.UsageCount uses</span>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted text-center">No data available</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Authors -->
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-award"></i> Top 5 Authors</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.TopAuthors != null && Model.TopAuthors.Any())
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var author in Model.TopAuthors)
+                        {
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-person-fill text-success"></i> @author.AuthorName</span>
+                                <span class="badge bg-success rounded-pill">@author.ArticleCount articles</span>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted text-center">No data available</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Articles -->
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent Articles</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.RecentArticles != null && Model.RecentArticles.Any())
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var article in Model.RecentArticles)
+                        {
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">@article.NewsTitle</h6>
+                                        <small class="text-muted">
+                                            <i class="bi bi-folder"></i> @article.CategoryName |
+                                            <i class="bi bi-person"></i> @article.CreatedByName
+                                            @if (article.CreatedDate.HasValue)
+                                            {
+                                                <span> | <i class="bi bi-calendar"></i> @article.CreatedDate.Value.ToString("MMM dd, yyyy")</span>
+                                            }
+                                        </small>
+                                    </div>
+                                    @if (article.NewsStatus.HasValue && article.NewsStatus.Value)
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted text-center">No recent articles</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Prepare data from Model
+        const articlesByStatus = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ArticlesByStatus));
+        const usersByRole = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.UsersByRole));
+        const articlesByCategory = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ArticlesByCategory));
+
+        // Article Status Pie Chart
+        const statusCtx = document.getElementById('statusChart').getContext('2d');
+        new Chart(statusCtx, {
+            type: 'pie',
+            data: {
+                labels: articlesByStatus.map(x => x.Status),
+                datasets: [{
+                    label: 'Articles',
+                    data: articlesByStatus.map(x => x.Count),
+                    backgroundColor: ['#28a745', '#6c757d'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            font: {
+                                size: 12
+                            },
+                            generateLabels: function(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+                                        const value = data.datasets[0].data[i];
+                                        return {
+                                            text: `${label}: ${value} articles`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            hidden: false,
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    title: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${label}: ${value} articles (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // User Role Doughnut Chart
+        const roleCtx = document.getElementById('roleChart').getContext('2d');
+        new Chart(roleCtx, {
+            type: 'doughnut',
+            data: {
+                labels: usersByRole.map(x => x.RoleName),
+                datasets: [{
+                    label: 'Users',
+                    data: usersByRole.map(x => x.Count),
+                    backgroundColor: ['#dc3545', '#ffc107', '#17a2b8'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            font: {
+                                size: 12
+                            },
+                            generateLabels: function(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+                                        const value = data.datasets[0].data[i];
+                                        return {
+                                            text: `${label}: ${value} users`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            hidden: false,
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    title: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${label}: ${value} users (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Articles by Category Bar Chart
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        new Chart(categoryCtx, {
+            type: 'bar',
+            data: {
+                labels: articlesByCategory.map(x => x.CategoryName),
+                datasets: [{
+                    label: 'Number of Articles',
+                    data: articlesByCategory.map(x => x.Count),
+                    backgroundColor: '#0d6efd',
+                    borderColor: '#0d6efd',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        },
+                        title: {
+                            display: true,
+                            text: 'Number of Articles',
+                            font: {
+                                size: 12,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Category Name',
+                            font: {
+                                size: 12,
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.parsed.y || 0;
+                                return `Articles: ${value}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+}

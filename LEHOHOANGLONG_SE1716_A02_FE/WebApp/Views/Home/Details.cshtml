@@ -1,0 +1,74 @@
+@model WebApp.Models.NewsArticleViewModel
+
+@{
+    ViewData["Title"] = Model.NewsTitle;
+}
+
+<div class="mb-4">
+    <a asp-action="Index" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Home
+    </a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+            <h2 class="card-title">@Model.NewsTitle</h2>
+            @if (Model.NewsStatus)
+            {
+                <span class="badge bg-success fs-6">Active</span>
+            }
+            else
+            {
+                <span class="badge bg-secondary fs-6">Inactive</span>
+            }
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <p class="text-muted mb-1">
+                    <i class="bi bi-folder-fill"></i> <strong>Category:</strong> @Model.CategoryName
+                </p>
+                <p class="text-muted mb-1">
+                    <i class="bi bi-person-fill"></i> <strong>Author:</strong> @Model.CreatedByName
+                </p>
+            </div>
+            <div class="col-md-6">
+                <p class="text-muted mb-1">
+                    <i class="bi bi-calendar-fill"></i> <strong>Published:</strong> @Model.CreatedDate?.ToString("MMMM dd, yyyy")
+                </p>
+                @if (Model.ModifiedDate.HasValue && Model.ModifiedDate != Model.CreatedDate)
+                {
+                    <p class="text-muted mb-1">
+                        <i class="bi bi-calendar-check-fill"></i> <strong>Updated:</strong> @Model.ModifiedDate?.ToString("MMMM dd, yyyy")
+                    </p>
+                }
+            </div>
+        </div>
+
+        @if (Model.Tags != null && Model.Tags.Any())
+        {
+            <div class="mb-4">
+                <strong><i class="bi bi-tags-fill"></i> Tags:</strong>
+                @foreach (var tag in Model.Tags)
+                {
+                    <span class="badge bg-info text-dark me-1">@tag.TagName</span>
+                }
+            </div>
+        }
+
+        <hr />
+
+        <div class="article-content" style="font-size: 1.1rem; line-height: 1.8;">
+            @Html.Raw(Model.NewsContent.Replace("\n", "<br />"))
+        </div>
+    </div>
+</div>
+
+@if (ViewBag.IsAuthenticated == false)
+{
+    <div class="alert alert-info mt-4" role="alert">
+        <i class="bi bi-info-circle-fill"></i> 
+        <a asp-controller="Auth" asp-action="Login" class="alert-link">Sign in</a> to manage articles and access more features.
+    </div>
+}

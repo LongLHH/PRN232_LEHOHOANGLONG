@@ -1,0 +1,244 @@
+@model List<WebApp.Models.SystemAccountViewModel>
+
+@{
+    ViewData["Title"] = "System Accounts";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="bi bi-people-fill"></i> System Accounts</h2>
+        <p class="text-muted">Manage user accounts</p>
+    </div>
+    <div>
+        @if (ViewBag.UserRole == 0)
+        {
+            <button type="button" class="btn btn-primary" onclick="showCreateModal()">
+                <i class="bi bi-plus-circle"></i> Create Account
+            </button>
+            <a asp-action="Report" class="btn btn-info">
+                <i class="bi bi-file-earmark-text"></i> Report
+            </a>
+        }
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Email</th>
+                        <th>Name</th>
+                        <th>Role</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">No accounts found</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var account in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <i class="bi bi-envelope"></i> @account.AccountEmail
+                                </td>
+                                <td>@account.AccountName</td>
+                                <td>
+                                    @switch (account.AccountRole)
+                                    {
+                                        case 0:
+                                            <span class="badge bg-danger">Admin</span>
+                                            break;
+                                        case 1:
+                                            <span class="badge bg-warning">Staff</span>
+                                            break;
+                                        case 2:
+                                            <span class="badge bg-info">Lecturer</span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-secondary">Unknown</span>
+                                            break;
+                                    }
+                                </td>
+                                <td>
+                                    @if (ViewBag.UserRole == 0)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                onclick="showEditModal('@account.AccountId', '@account.AccountEmail', '@account.AccountName', @account.AccountRole)">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                onclick="confirmDelete('@account.AccountId', '@account.AccountEmail')">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Create Modal -->
+<div class="modal fade" id="createModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Create Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="createForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Email *</label>
+                        <input type="email" class="form-control" id="createEmail" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Name *</label>
+                        <input type="text" class="form-control" id="createName" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password *</label>
+                        <input type="password" class="form-control" id="createPassword" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Role *</label>
+                        <select class="form-select" id="createRole" required>
+                            <option value="1" selected>Staff</option>
+                            <option value="2">Lecturer</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Create
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-pencil"></i> Edit Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editForm">
+                <input type="hidden" id="editId" />
+                <input type="hidden" id="editEmail" />
+                <input type="hidden" id="editRole" />
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" id="editEmailDisplay" readonly />
+                        <small class="text-muted">Email cannot be changed</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Name *</label>
+                        <input type="text" class="form-control" id="editName" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const createModal = new bootstrap.Modal(document.getElementById('createModal'));
+        const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+
+        function showCreateModal() {
+            document.getElementById('createForm').reset();
+            createModal.show();
+        }
+
+        function showEditModal(id, email, name, role) {
+            document.getElementById('editId').value = id;
+            document.getElementById('editEmail').value = email;
+            document.getElementById('editEmailDisplay').value = email;
+            document.getElementById('editName').value = name;
+            document.getElementById('editRole').value = role;
+            editModal.show();
+        }
+
+        function confirmDelete(id, email) {
+            if (confirm(`Are you sure you want to delete account: ${email}?`)) {
+                window.location.href = `/SystemAccounts/Delete/${id}`;
+            }
+        }
+
+        document.getElementById('createForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const data = {
+                AccountEmail: document.getElementById('createEmail').value,
+                AccountName: document.getElementById('createName').value,
+                AccountPassword: document.getElementById('createPassword').value,
+                AccountRole: parseInt(document.getElementById('createRole').value)
+            };
+
+            try {
+                const response = await fetch('/SystemAccounts/Create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    location.reload();
+                }
+            } catch (error) {
+                console.error('Error creating account:', error);
+            }
+        });
+
+        document.getElementById('editForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const id = document.getElementById('editId').value;
+            const data = {
+                AccountId: parseInt(id),
+                AccountEmail: document.getElementById('editEmail').value,
+                AccountName: document.getElementById('editName').value,
+                AccountPassword: null,
+                AccountRole: parseInt(document.getElementById('editRole').value)
+            };
+
+            try {
+                const response = await fetch(`/SystemAccounts/Edit/${id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    location.reload();
+                }
+            } catch (error) {
+                console.error('Error editing account:', error);
+            }
+        });
+    </script>
+}

@@ -1,0 +1,86 @@
+@model List<WebApp.Models.SystemAccountViewModel>
+
+@{
+    ViewData["Title"] = "Accounts Report";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="bi bi-file-earmark-text"></i> Accounts Report</h2>
+        <p class="text-muted">Statistical report of system accounts</p>
+    </div>
+    <div>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to List
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-danger shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-shield-fill"></i> Admin Accounts</h5>
+                <h2 class="card-text">@Model.Count(a => a.AccountRole == 0)</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-warning shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-person-badge"></i> Staff Accounts</h5>
+                <h2 class="card-text">@Model.Count(a => a.AccountRole == 1)</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-info shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-person-video3"></i> Lecturer Accounts</h5>
+                <h2 class="card-text">@Model.Count(a => a.AccountRole == 2)</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header">
+        <h5><i class="bi bi-list-ul"></i> All Accounts</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Email</th>
+                        <th>Name</th>
+                        <th>Role</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var account in Model.OrderBy(a => a.AccountRole).ThenBy(a => a.AccountEmail))
+                    {
+                        <tr>
+                            <td><i class="bi bi-envelope"></i> @account.AccountEmail</td>
+                            <td>@account.AccountName</td>
+                            <td>
+                                @switch (account.AccountRole)
+                                {
+                                    case 0:
+                                        <span class="badge bg-danger">Admin</span>
+                                        break;
+                                    case 1:
+                                        <span class="badge bg-warning">Staff</span>
+                                        break;
+                                    case 2:
+                                        <span class="badge bg-info">Lecturer</span>
+                                        break;
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,353 @@
+@model List<WebApp.Models.NewsArticleViewModel>
+
+@{
+    ViewData["Title"] = "News Articles";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="bi bi-newspaper"></i> News Articles</h2>
+        <p class="text-muted">Manage all news articles</p>
+    </div>
+    <div>
+        @if (ViewBag.UserRole <= 1)
+        {
+            <button type="button" class="btn btn-primary" onclick="showCreateModal()">
+                <i class="bi bi-plus-circle"></i> Create Article
+            </button>
+            @if (ViewBag.UserRole == 2)
+            {
+                <a asp-action="MyArticles" class="btn btn-info">
+                    <i class="bi bi-person-lines-fill"></i> My Articles
+                </a>
+            }
+        }
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Author</th>
+                        <th>Status</th>
+                        <th>Created Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">No articles found</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var article in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@article.NewsTitle</strong>
+                                    @if (article.Tags.Any())
+                                    {
+                                        <br />
+                                        @foreach (var tag in article.Tags)
+                                        {
+                                            <span class="badge bg-secondary me-1">@tag.TagName</span>
+                                        }
+                                    }
+                                </td>
+                                <td>
+                                    <i class="bi bi-folder"></i> @article.CategoryName
+                                </td>
+                                <td>
+                                    <i class="bi bi-person"></i> @article.CreatedByName
+                                </td>
+                                <td>
+                                    @if (article.NewsStatus)
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    }
+                                </td>
+                                <td>
+                                    <i class="bi bi-calendar"></i> @article.CreatedDate?.ToString("dd/MM/yyyy")
+                                </td>
+                                <td>
+                                    <a asp-action="Details" asp-route-id="@article.NewsArticleId" class="btn btn-sm btn-outline-info">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    @if (ViewBag.UserRole <= 1 || article.CreatedById == ViewBag.UserId)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                onclick="showEditModal('@article.NewsArticleId')">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                onclick="confirmDelete('@article.NewsArticleId', '@Html.Raw(article.NewsTitle)')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Create Modal -->
+<div class="modal fade" id="createModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Create News Article</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="createForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Title *</label>
+                        <input type="text" class="form-control" id="createTitle" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Content *</label>
+                        <textarea class="form-control" id="createContent" rows="5" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Category *</label>
+                        <select class="form-select" id="createCategory" required>
+                            <option value="">Select category...</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tags</label>
+                        <select class="form-select" id="createTags" multiple size="5">
+                        </select>
+                        <small class="text-muted">Hold Ctrl/Cmd to select multiple tags</small>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="createStatus" checked />
+                            <label class="form-check-label" for="createStatus">
+                                Active
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Create
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-pencil"></i> Edit News Article</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editForm">
+                <input type="hidden" id="editId" />
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Title *</label>
+                        <input type="text" class="form-control" id="editTitle" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Content *</label>
+                        <textarea class="form-control" id="editContent" rows="5" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Category *</label>
+                        <select class="form-select" id="editCategory" required>
+                            <option value="">Select category...</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tags</label>
+                        <select class="form-select" id="editTags" multiple size="5">
+                        </select>
+                        <small class="text-muted">Hold Ctrl/Cmd to select multiple tags</small>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="editStatus" />
+                            <label class="form-check-label" for="editStatus">
+                                Active
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const createModal = new bootstrap.Modal(document.getElementById('createModal'));
+        const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+        let categories = [];
+        let tags = [];
+
+        // Load categories and tags on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadCategories();
+            await loadTags();
+        });
+
+        async function loadCategories() {
+            try {
+                const response = await fetch('/Categories/GetAll');
+                categories = await response.json();
+                
+                const createSelect = document.getElementById('createCategory');
+                const editSelect = document.getElementById('editCategory');
+                
+                categories.forEach(cat => {
+                    createSelect.add(new Option(cat.categoryName, cat.categoryId));
+                    editSelect.add(new Option(cat.categoryName, cat.categoryId));
+                });
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+
+        async function loadTags() {
+            try {
+                const response = await fetch('/Tags/GetAll');
+                tags = await response.json();
+                
+                const createSelect = document.getElementById('createTags');
+                const editSelect = document.getElementById('editTags');
+                
+                tags.forEach(tag => {
+                    createSelect.add(new Option(tag.tagName, tag.tagId));
+                    editSelect.add(new Option(tag.tagName, tag.tagId));
+                });
+            } catch (error) {
+                console.error('Error loading tags:', error);
+            }
+        }
+
+        function showCreateModal() {
+            document.getElementById('createForm').reset();
+            document.getElementById('createStatus').checked = true;
+            createModal.show();
+        }
+
+        async function showEditModal(id) {
+            try {
+                const response = await fetch(`/NewsArticles/GetById/${id}`);
+                const article = await response.json();
+                
+                document.getElementById('editId').value = article.newsArticleId;
+                document.getElementById('editTitle').value = article.newsTitle;
+                document.getElementById('editContent').value = article.newsContent;
+                document.getElementById('editCategory').value = article.categoryId.toString();
+                document.getElementById('editStatus').checked = article.newsStatus;
+                
+                // Select tags - convert both to numbers for comparison
+                const editTagsSelect = document.getElementById('editTags');
+                const articleTagIds = article.tags.map(t => t.tagId);
+                Array.from(editTagsSelect.options).forEach(option => {
+                    option.selected = articleTagIds.includes(parseInt(option.value));
+                });
+                
+                editModal.show();
+            } catch (error) {
+                alert('Error loading article: ' + error.message);
+            }
+        }
+
+        function confirmDelete(id, title) {
+            if (confirm(`Are you sure you want to delete article: ${title}?\n\nThis action cannot be undone.`)) {
+                window.location.href = `/NewsArticles/Delete/${id}`;
+            }
+        }
+
+        document.getElementById('createForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const selectedTags = Array.from(document.getElementById('createTags').selectedOptions)
+                .map(option => parseInt(option.value));
+            
+            const data = {
+                newsTitle: document.getElementById('createTitle').value,
+                newsContent: document.getElementById('createContent').value,
+                categoryId: parseInt(document.getElementById('createCategory').value),
+                newsStatus: document.getElementById('createStatus').checked,
+                selectedTagIds: selectedTags
+            };
+
+            try {
+                const response = await fetch('/NewsArticles/Create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    location.reload();
+                }
+            } catch (error) {
+                console.error('Error creating article:', error);
+            }
+        });
+
+        document.getElementById('editForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const id = document.getElementById('editId').value;
+            const selectedTags = Array.from(document.getElementById('editTags').selectedOptions)
+                .map(option => parseInt(option.value));
+            
+            const data = {
+                newsArticleId: id,
+                newsTitle: document.getElementById('editTitle').value,
+                newsContent: document.getElementById('editContent').value,
+                categoryId: parseInt(document.getElementById('editCategory').value),
+                newsStatus: document.getElementById('editStatus').checked,
+                selectedTagIds: selectedTags
+            };
+
+            try {
+                const response = await fetch(`/NewsArticles/Edit/${id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    location.reload();
+                }
+            } catch (error) {
+                console.error('Error editing article:', error);
+            }
+        });
+    </script>
+}

@@ -1,0 +1,71 @@
+﻿@model List<WebApp.Models.NewsArticleViewModel>
+
+@{
+    ViewData["Title"] = "Home - News Articles";
+}
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2><i class="bi bi-newspaper"></i> Latest News</h2>
+        <p class="text-muted">Browse all active news articles</p>
+    </div>
+    <div class="col-md-4">
+        <form asp-action="Index" method="get" class="d-flex">
+            <input type="text" name="searchTerm" class="form-control me-2" placeholder="Search articles..." value="@ViewBag.SearchTerm" />
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-search"></i>
+            </button>
+        </form>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> No news articles found.
+    </div>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        @foreach (var article in Model.Where(a => a.NewsStatus))
+        {
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">@article.NewsTitle</h5>
+                        <p class="card-text text-muted small">
+                            <i class="bi bi-folder"></i> @article.CategoryName<br>
+                            <i class="bi bi-person"></i> @article.CreatedByName<br>
+                            <i class="bi bi-calendar"></i> @article.CreatedDate?.ToString("MMM dd, yyyy")
+                        </p>
+                        <p class="card-text">
+                            @(article.NewsContent.Length > 100 ? article.NewsContent.Substring(0, 100) + "..." : article.NewsContent)
+                        </p>
+                        @if (article.Tags.Any())
+                        {
+                            <div class="mb-2">
+                                @foreach (var tag in article.Tags)
+                                {
+                                    <span class="badge bg-secondary me-1">@tag.TagName</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <a asp-action="Details" asp-route-id="@article.NewsArticleId" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i> Read More
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@if (ViewBag.IsAuthenticated != true)
+{
+    <div class="alert alert-warning mt-4">
+        <i class="bi bi-info-circle"></i> <a asp-controller="Auth" asp-action="Login" class="alert-link">Login</a> to manage news articles and categories.
+    </div>
+}
